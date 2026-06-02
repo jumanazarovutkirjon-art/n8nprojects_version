@@ -1,0 +1,213 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "0f05741e-1cc5-4a24-91f1-dcae858e0e40",
+      "name": "Telegram Trigger",
+      "webhookId": "23cfcb73-d41b-40ca-a85f-bf03092ad7b5",
+      "credentials": {
+        "telegramApi": {
+          "id": "pU5YizmpGS5X4F9J",
+          "name": "n8n_test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        80,
+        208
+      ],
+      "id": "ca1c8688-5b0d-44f3-ae04-a44e07ec8cde",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "sJbNPIiQFxridYfg",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1DZ9V-oAgAVbhIrkYLBUNu6O2fnFpTQ56Kfv2fHTva0E",
+          "mode": "list",
+          "cachedResultName": "n8nprojects",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1DZ9V-oAgAVbhIrkYLBUNu6O2fnFpTQ56Kfv2fHTva0E/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Лист1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1DZ9V-oAgAVbhIrkYLBUNu6O2fnFpTQ56Kfv2fHTva0E/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        432,
+        224
+      ],
+      "id": "36d712f0-e83a-422d-8f15-d02d4ccfa804",
+      "name": "Tovarlar_ro`yxati",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "bgAX3RDWeKQFZO9k",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "Sen do`kon mahsulotlari haqida ma`lumot beruvchi sotuvchi yordamchisisan.\nAssalomu aleykum deb so`z boshlaganda: Vaaleykum assalom , sizga qanday yordam bera olaman deb javob qaytar.\nQachonki sendga \"Tovarlar_ro`yxati\" google sheetda mavjud bo`lmagan savol berilsa ,  @Utkirjon7707 ga yoki 50 0057270 kontaklariga murojat qilishlarini ayt\nGoogle Sheets buyicha tizimga taluqli ma`lumorlarni userlarga yozma, \nFaqat oddiy matnda javob ber. Markdown yo'q, HTML yo'q, kod bloklari yo'q.\nsiz kimsiz deb savol berilganda Man sotuvchi yordamchisidan deb aytgin.\n\n\nGoogle Sheetsda siz so`ragan narsa topilmadi deb yozma. Google sheetsdagi ma`lumotlarda bu brend topilmadi deb yozma, aksinka javob berginki siz so`ragan tovar bizning bazamizda topilmadi. qo`shimcha ma`lumot olish uchun @Utkirjon_7707 ga murojat qiling deb javob qaytar\nfaqatgina google sheets da berilgan Savol Javoblarga mos raishda javob ber \nDo`konga oid savol berilmasa , \"Bu do`konimizga taluqli savol emas, boshqa savolingiz yuqmi \" deb javob qaytar\n\nO`zingdan har xil javoblar uylab topma.\n\nGoogle Sheets dagi ma`lumotlardan boshqa turdagi telefonlar haqida savol berilmasa @Utkirjon7707 ga yoki 50 0057270 kontaklariga murojat qilishlarini ayt.\nmisol uchun :\n ##do`konda qayday mahsulotlar bor\n\n**Input**\n\nuser - 2\n\n**output**\nYou - do`kon mahsulotlari haqida ma`lumot google sheets dagi Javov: qismida ko`rsatilgan , Do`konimiz telefonlar hamdda ularga aksesuarlar faoliyati bilan shug`ullanadi"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "f4568c42-f746-449c-912d-5da52a0dc98b",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Забираем сырой текст из AI Agent\nlet text =\n  $json.output ??\n  $json.text ??\n  $json.message?.content ??\n  $json.message?.text ??\n  \"\";\n\n// 2. Защита от объектов (если ИИ вернул JSON вместо строки)\nif (typeof text === 'object' && text !== null) {\n  text = JSON.stringify(text, null, 2);\n} else {\n  text = String(text).trim();\n}\n\n// 3. Защита от пустоты\nif (!text) {\n  text = \"Бот вернул пустое сообщение.\";\n}\n\n// 4. Очистка от ВСЕХ скрытых символов разметки Markdown,\n// которые ИИ обожает ставить (точки в списках, дефисы, звездочки)\ntext = text.replace(/[_*\\[\\]()~`>#+\\-=|{}.!]/g, \"\");\n\n// 5. Защита от слишком длинных ответов ИИ (лимит Telegram — 4096)\nif (text.length > 4000) {\n  text = text.substring(0, 4000) + \"\\n...[Текст обрезан из-за лимита длины]\";\n}\n\n// 6. Передаем чистый текст дальше в узел Telegram\nreturn [{\n  json: {\n    text: text\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        512,
+        16
+      ],
+      "id": "7b222421-cd50-4787-b29b-f6083200d40e",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        720,
+        32
+      ],
+      "id": "6e1d84c0-f622-442e-b3af-2c3cabb8c363",
+      "name": "Send a text message",
+      "webhookId": "2a4b5692-c64c-4a2f-8952-407e3a3d9703",
+      "credentials": {
+        "telegramApi": {
+          "id": "hHehcABLx0OLN4sU",
+          "name": "sotuvchi bot"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tovarlar_ro`yxati": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "d2731808-f15d-486d-98e3-f26fe61b3a97",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "dab433db43c5a517b934fe5fffe3a5df72ab55f97ccc40d33a7bd062efc9d155"
+  },
+  "id": "36HmTVKp6ET5BVqa",
+  "tags": []
+}
